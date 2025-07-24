@@ -1,0 +1,103 @@
+import tkinter as tk
+from tkinter import ttk
+import random
+from collections import deque
+
+class Dice:
+    def __init__(self):
+        self.faces = {
+            1: "⚀",
+            2: "⚁",
+            3: "⚂",
+            4: "⚃",
+            5: "⚄",
+            6: "⚅"
+        }
+
+    def roll(self) -> tuple[int, str]:
+        number = random.randint(1, 6)
+        return number, self.faces[number]
+
+class DiceRollerGUI:
+    def __init__(self, root: tk.Tk):
+        self.root = root
+        self.root.title("🎲 Enhanced Dice Roller")
+        self.root.geometry("500x400")
+        self.root.configure(bg="#f0f8ff")
+
+        self.dice = Dice()
+        self.roll_history = deque(maxlen=5)
+
+        self._setup_widgets()
+
+    def _setup_widgets(self):
+        title = tk.Label(self.root, text="🎲 Roll the Dice!", font=("Arial", 20, "bold"), bg="#f0f8ff")
+        title.pack(pady=10)
+
+        # Dice Count Option
+        self.dice_count = tk.IntVar(value=1)
+        options_frame = tk.Frame(self.root, bg="#f0f8ff")
+        options_frame.pack()
+        tk.Label(options_frame, text="Number of Dice:", bg="#f0f8ff").pack(side=tk.LEFT)
+        for count in (1, 2, 3):
+            ttk.Radiobutton(options_frame, text=str(count), variable=self.dice_count, value=count).pack(side=tk.LEFT)
+
+        # Dice Faces
+        self.dice_frame = tk.Frame(self.root, bg="#f0f8ff")
+        self.dice_frame.pack(pady=15)
+        self.dice_labels = [tk.Label(self.dice_frame, text="🎲", font=("Arial", 70), bg="#f0f8ff") for _ in range(3)]
+        for label in self.dice_labels:
+            label.pack(side=tk.LEFT, padx=10)
+
+        # Result
+        self.result_label = tk.Label(self.root, text="", font=("Arial", 14), bg="#f0f8ff")
+        self.result_label.pack()
+
+        # Buttons
+        button_frame = tk.Frame(self.root, bg="#f0f8ff")
+        button_frame.pack(pady=10)
+        ttk.Button(button_frame, text="Roll", command=self.roll_dice).pack(side=tk.LEFT, padx=10)
+        ttk.Button(button_frame, text="Clear History", command=self.clear_history).pack(side=tk.LEFT, padx=10)
+        ttk.Button(button_frame, text="Exit", command=self.root.destroy).pack(side=tk.LEFT, padx=10)
+
+        # History
+        tk.Label(self.root, text="Last 5 Rolls:", font=("Arial", 12), bg="#f0f8ff").pack()
+        self.history_box = tk.Listbox(self.root, height=5, width=40)
+        self.history_box.pack()
+
+    def roll_dice(self):
+        count = self.dice_count.get()
+        results = []
+        faces = []
+
+        for _ in range(count):
+            num, face = self.dice.roll()
+            results.append(num)
+            faces.append(face)
+
+        for i in range(3):
+            self.dice_labels[i].config(text=faces[i] if i < count else "")
+
+        result_str = f"Rolled: {', '.join(map(str, results))}"
+        self.result_label.config(text=result_str)
+
+        self.roll_history.appendleft(result_str)
+        self.update_history()
+
+    def update_history(self):
+        self.history_box.delete(0, tk.END)
+        for item in self.roll_history:
+            self.history_box.insert(tk.END, item)
+
+    def clear_history(self):
+        self.roll_history.clear()
+        self.history_box.delete(0, tk.END)
+        self.result_label.config(text="")
+        for lbl in self.dice_labels:
+            lbl.config(text="")
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = DiceRollerGUI(root)
+    root.mainloop()
+
